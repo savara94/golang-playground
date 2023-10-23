@@ -210,3 +210,106 @@ type Wheel struct {
     Spokes int
 }
 ```
+
+Thanks to embedding, we can refer to the names at the leaves of the implicit tree without
+giving the intervening names:
+
+```
+var w Wheel
+w.X = 8 // equivalent to w.Circle.Point.X = 8
+w.Y = 8 // equivalent to w.Circle.Point.Y = 8
+w.Radius = 5 // equivalent to w.Circle.Radius = 5
+w.Spokes = 20
+```
+
+
+# 5. Functions
+
+The parameter list specifies the names and types of the function’s parameters, which are the
+local variables whose values or arguments are supplied by the caller. The result list specifies
+the types of the values that the function returns. If the function returns one unnamed result
+or no results at all, parentheses are optional and usually omitted. Leaving off the result list
+entirely declares a function that does not return any value and is called only for its effects.
+
+```
+func name(parameter-list) (result-list) {
+    body
+}
+```
+
+The type of a function is sometimes called its signature. Two functions have the same type or
+signature if they have the same sequence of parameter types and the same sequence of result types.
+
+
+## 5.1 defer
+
+A defer statement is often used with paired operations like open and close, connect and disconnect, or lock and unlock to ensure that resources are released in all cases, no matter how complex the control flow.
+
+The function and argument expressions are evaluated when the statement is executed, but the actual call is deferred until the function that contains the defer statement has finished, whether normally, by executing a return statement or falling off the end, or
+abnormally, by panicking.
+
+Any number of calls may be deferred; they are executed in the reverse of the order in which they were deferred.
+
+Deferred functions run after return statements have updated the function’s result variables.
+
+## 5.2 panic
+
+Go’s type system catches many mistakes at compile time, but others, like an out-of-bounds
+array access or nil pointer dereference, require checks at run time. When the Go runtime
+detects these mistakes, it panics.
+
+During a typical panic, normal execution stops, all deferred function calls in that goroutine are
+executed, and the program crashes with a log message. This log message includes the panic
+value, which is usually an error message of some sort, and, for each goroutine, a stack trace 
+showing the stack of function calls that were active at the time of the panic.
+
+Although Go’s panic mechanism resembles exceptions in other languages, the situations in
+which panic is used are quite different. Since a panic causes the program to crash, it is general
+ly used for grave errors, such as a logical inconsistenc  in the program; diligent programmers
+consider any crash to be proof of a bug in their code. In a robust program, ‘‘expected’’
+errors, the kind that arise from incorrect input, misconfiguration, or failing I/O, should be
+handled gracefully; they are best dealt with using error values.
+
+## 5.3 recover
+
+If the built-in recover function is called within a deferred function and the function containing
+the defer statement is panicking, recover ends the current state of panic and returns the
+panic value. The function that was panicking does not continue where it left off but returns
+normally. If recover is called at any other time, it has no effect and returns nil.
+
+# 6. Methods
+
+Object is simply a value or variable that has methods, and a method is a function associated with a particular type.
+
+A method is declared with a variant of the ordinary function declaration in which an extra parameter appears before the function name.
+
+```
+package geometry
+
+import "math"
+
+type Point struct{ X, Y float64 }
+
+// traditional function
+func Distance(p, q Point) float64 {
+    return math.Hypot(q.X-p.X, q.Y-p.Y)
+}
+
+// same thing, but as a method of the Point type
+func (p Point) Distance(q Point) float64 {
+    return math.Hypot(q.X-p.X, q.Y-p.Y)
+}
+```
+
+Because calling a function makes a copy of each argument value, if a function needs to update a variable, or if an argument is so large that we wish to avoid copying it, we must pass the address of the variable using a pointer.
+
+In a realistic program, convention dictates that if any method of Point has a pointer receiver, then all methods of Point should have a pointer receiver, even ones that don’t strictly need it.
+
+# 7. Interfaces
+
+Interface types express generalizations or abstractions about the behaviors of other types. By generalizing, interfaces let us write functions that are more flexible and adaptable because they are not tied to the details of one particular implementation.
+
+Many object-oriented languages have some notion of interfaces, but what makes Go’s interfaces so distinctive is that they are satisfied implicitly. 
+
+When you have a value of an interface type, you know nothing about what it is; you know only what it can do, or more precisely, what behaviors are provided by its methods.
+
